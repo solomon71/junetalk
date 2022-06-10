@@ -47,15 +47,31 @@ class SynthSounds {
 
         // our message receiveers
         this.socket.channels[0].on("clowndown", payload => {
-            // console.log(payload)
             this.playRandomNote(payload.body)
         })
         this.socket.channels[0].on("clownup", payload => {
-            // console.log(payload)
             this.stopRandomNote(payload.body)
         })
 
+		document.querySelector('span').addEventListener('touchstart', (e) => {
+            this.pressDown(e)
+		})
+
 		document.querySelector('span').addEventListener('mousedown', (e) => {
+            this.pressDown(e)
+		})
+
+		document.querySelector('span').addEventListener('touchend', (e) => {
+            this.pressUp(e)
+		})
+
+		document.querySelector('span').addEventListener('mouseup', (e) => {
+            this.pressUp(e)
+		})
+
+    }
+
+    pressDown(e) {
             // invoke on mousedown if we have to
             if (Tone.Transport.state == "stopped") {
                 Tone.Transport.toggle()
@@ -67,14 +83,11 @@ class SynthSounds {
             e.currentTarget.dataset.note = note
 
             this.socket.channels[0].push("clowndown", {body: note})  // old -> this.playRandomNote(note)
-		})
+    }
 
-		document.querySelector('span').addEventListener('mouseup', (e) => {
-			e.target.textContent = "🤡"
-
-            this.socket.channels[0].push("clownup", {body: e.currentTarget.dataset.note})  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
-		})
-
+    pressUp(e) {
+        e.target.textContent = "🤡"
+        this.socket.channels[0].push("clownup", {body: e.currentTarget.dataset.note})  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
     }
 
     getRandomNote() {
