@@ -1,7 +1,7 @@
 import { Piano } from '@tonejs/piano'
 import * as Tone from 'tone'
 
-class SynthSounds {
+class SynthManager {
     constructor(socket) {
 
         this.socket = socket
@@ -32,9 +32,13 @@ class SynthSounds {
             'g4',
             'a#4',
             'c5',
+            'd#5',
+            'f5',
+            'g5',
+            'a#5',
         ]
         this.notesLength = this.notes.length
-        
+
     }
 
     setup() {
@@ -42,52 +46,42 @@ class SynthSounds {
         this.piano.toDestination()
 
         this.piano.load().then(() => {
-            Tone.Transport.toggle()
+            this.transportCheck()
         })
 
-        // our message receiveers
-        this.socket.channels[0].on("clowndown", payload => {
-            this.playRandomNote(payload.body)
-        })
-        this.socket.channels[0].on("clownup", payload => {
-            this.stopRandomNote(payload.body)
-        })
-
-		document.querySelector('span').addEventListener('touchstart', (e) => {
+        document.querySelector('span').addEventListener('touchstart', (e) => {
             this.pressDown(e)
-		})
+        })
 
-		document.querySelector('span').addEventListener('mousedown', (e) => {
+        document.querySelector('span').addEventListener('mousedown', (e) => {
             this.pressDown(e)
-		})
+        })
 
-		document.querySelector('span').addEventListener('touchend', (e) => {
+        document.querySelector('span').addEventListener('touchend', (e) => {
             this.pressUp(e)
-		})
+        })
 
-		document.querySelector('span').addEventListener('mouseup', (e) => {
+        document.querySelector('span').addEventListener('mouseup', (e) => {
             this.pressUp(e)
-		})
+        })
 
     }
 
     pressDown(e) {
-            // invoke on mousedown if we have to
-            if (Tone.Transport.state == "stopped") {
-                Tone.Transport.toggle()
-            }
-            
-            // get a note and assign that value to a data attr for ephemeral state
-            let note = this.getRandomNote()
-			e.target.textContent = "🫥"
-            e.currentTarget.dataset.note = note
+        // invoke on mousedown if we have to
+        this.transportCheck()
 
-            this.socket.channels[0].push("clowndown", {body: note})  // old -> this.playRandomNote(note)
+        // get a note and assign that value to a data attr for ephemeral state
+        let note = this.getRandomNote()
+        e.target.textContent = "🫥"
+        e.currentTarget.dataset.note = note
+
+        this.socket.channels[0].push("clowndown", { body: note })  // old -> this.playRandomNote(note)
     }
 
     pressUp(e) {
         e.target.textContent = "🤡"
-        this.socket.channels[0].push("clownup", {body: e.currentTarget.dataset.note})  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
+        this.socket.channels[0].push("clownup", { body: e.currentTarget.dataset.note })  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
     }
 
     getRandomNote() {
@@ -103,10 +97,16 @@ class SynthSounds {
         this.piano.keyUp({ note: note })
     }
 
+    transportCheck() {
+        if (Tone.Transport.state == "stopped") {
+            Tone.Transport.toggle()
+        }
+    }
+
     yo() {
         return "Yo!"
     }
 
 }
 
-export default SynthSounds
+export default SynthManager

@@ -25,23 +25,38 @@ import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
-import topbar from "../vendor/topbar"
 
-// Our click logic
-import SynthSounds from './audio/synthsounds'
+//  import topbar from "../vendor/topbar"
 import socket from "./user_socket.js"
+
+// Our sound/interaction manager
+import SynthManager from './audio/synthmanager'
+
+// particle
+import Particle from './particle'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", info => topbar.show())
-window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+// topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
+// window.addEventListener("phx:page-loading-start", info => topbar.show())
+// window.addEventListener("phx:page-loading-stop", info => topbar.hide())
 
-let synthSounds = new SynthSounds(socket)
-synthSounds.setup()
+let synthManager = new SynthManager(socket)
+synthManager.setup()
 
+let whoa = new Particle()
+whoa.setup()
+
+// our message receiveers
+socket.channels[0].on("clowndown", payload => {
+    synthManager.playRandomNote(payload.body)
+    whoa.createOne()
+})
+socket.channels[0].on("clownup", payload => {
+    synthManager.stopRandomNote(payload.body)
+})
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
