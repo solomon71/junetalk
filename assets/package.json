@@ -3,15 +3,12 @@
   "version": "1.0.0",
   "description": "piano stuff",
   "dependencies": {
-    "automation-events": "^4.0.19",
-    "events": "^3.3.0",
-    "standardized-audio-context": "^25.3.28",
-    "tone": "^14.7.77",
-    "webmidi": "^2.5.3",
-    "regenerator-runtime": "^0.13.9",
-    "tslib": "^1.14.1"
+    "@tonejs/piano": "^0.2.1",
+    "tone": "^14.7.77"
   },
-  "devDependencies": {},
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "events": "^3.3.0"
+  }
 }
