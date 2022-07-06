@@ -32,6 +32,9 @@ import socket from "./user_socket.js"
 // Our sound/interaction manager
 import SynthManager from './audio/synthmanager'
 
+// MIDI
+import ClownMidi from "./audio/clownmidi"
+
 // particle
 import Particle from './particle'
 
@@ -43,27 +46,70 @@ let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToke
 // window.addEventListener("phx:page-loading-start", info => topbar.show())
 // window.addEventListener("phx:page-loading-stop", info => topbar.hide())
 
+
 let synthManager = new SynthManager(socket)
 synthManager.setup()
 
-let whoa = new Particle()
-whoa.setup()
+let clownMIDI = new ClownMidi()
+clownMIDI.setup()
+
+let dots = new Particle()
+dots.setup()
+
+// MIDI
+window.addEventListener('midikeys', (e) => {
+    let code = e.detail[0]  // 144 key press, 128 key release
+    switch (code) {
+        case 144:
+            synthManager.keyboardDown(`${e.detail[1]}`)
+            break
+        case 128:
+            synthManager.keyboardUp(`${e.detail[1]}`)
+            break
+        default:
+            console.log(`default -- code: ${code}`)
+    }
+})
 
 // our message receiveers
 socket.channels[0].on("clowndown", payload => {
-    synthManager.playRandomNote(payload.body)
-    whoa.createOne()
+    //  console.log(payload)
+    synthManager.playNote(payload.body, payload.synth)
+    dots.createOne()
 })
 socket.channels[0].on("clownup", payload => {
-    synthManager.stopRandomNote(payload.body)
+    //  console.log(payload)
+    synthManager.stopNote(payload.body, payload.synth)
 })
 
+
 // connect if there are any LiveViews on the page
-liveSocket.connect()
+//  liveSocket.connect()
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
+//  window.liveSocket = liveSocket
 
+function startup() {
+    document.querySelector('#helloinit').addEventListener('click', (ele) => {
+        document.querySelectorAll('.hidden').forEach( (ele) => {
+            ele.classList.remove('hidden')
+        })
+        ele.currentTarget.classList.add('hidden')
+
+        synthManager.toneMe()
+    })
+}
+
+// function userInit(ele) {
+//     document.querySelectorAll('.hidden').forEach( (ele) => {
+//         ele.classList.remove('hidden')
+//     })
+//     ele.currentTarget.classList.add('hidden')
+
+//     synthManager.toneMe()
+// }
+
+document.addEventListener("DOMContentLoaded", startup);

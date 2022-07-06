@@ -12,7 +12,7 @@ config :junetalk,
 
 # Configures the endpoint
 config :junetalk, JunetalkWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "localhost", port: System.get_env("PORT") || 4000],
   render_errors: [view: JunetalkWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Junetalk.PubSub,
   live_view: [signing_salt: "LSKW5SSu"]

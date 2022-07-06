@@ -17,13 +17,18 @@ defmodule JunetalkWeb.RoomChannel do
     {:reply, {:ok, payload}, socket}
   end
 
+  def handle_in("synth_assign", %{"body" => synth}, socket) do
+    socket = assign(socket, :synth, synth)
+    {:reply, {:ok, synth}, socket}
+  end
+
   def handle_in("clowndown", %{"body" => body}, socket) do
-    broadcast!(socket, "clowndown", %{body: body})
+    broadcast!(socket, "clowndown", %{body: body, synth: socket.assigns.synth})
     {:noreply, socket}
   end
 
   def handle_in("clownup", %{"body" => body}, socket) do
-    broadcast!(socket, "clownup", %{body: body})
+    broadcast!(socket, "clownup", %{body: body, synth: socket.assigns.synth})
     {:noreply, socket}
   end
 

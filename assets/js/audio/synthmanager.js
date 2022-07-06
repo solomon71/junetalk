@@ -1,4 +1,3 @@
-import { Piano } from '@tonejs/piano'
 import * as Tone from 'tone'
 
 class SynthManager {
@@ -6,9 +5,40 @@ class SynthManager {
 
         this.socket = socket
 
-        this.piano = new Piano({
-            velocities: 5
-        })
+        this.filter = new Tone.AutoPanner("6s").start()
+        this.reverb = new Tone.Reverb(4)
+        this.feedbackDelay = new Tone.FeedbackDelay("4n", 0.75)
+
+        this.amSynth = new Tone.PolySynth(Tone.AMSynth)
+        this.duoSynth = new Tone.PolySynth(Tone.DuoSynth)
+        this.fmSynth = new Tone.PolySynth(Tone.FMSynth)
+        this.membraneSynth = new Tone.PolySynth(Tone.MembraneSynth, {octaves: 4, pitchDecay: 0.1})
+        this.metalSynth = new Tone.PolySynth(Tone.MetalSynth)
+        this.monoSynth = new Tone.PolySynth(Tone.MonoSynth)
+        this.synth = new Tone.PolySynth(Tone.Synth)
+
+        this.amSynth.chain(this.filter, this.reverb, Tone.Destination)
+        this.duoSynth.chain(this.filter, this.reverb, Tone.Destination)
+        this.membraneSynth.chain(this.reverb, Tone.Destination)
+        this.metalSynth.chain(this.reverb, Tone.Destination)
+        this.monoSynth.chain(this.filter, this.reverb, Tone.Destination)
+        this.synth.chain(this.filter, this.reverb, Tone.Destination)
+        this.fmSynth.chain(this.filter, this.feedbackDelay, this.reverb, Tone.Destination)
+
+        this.synths = [this.amSynth,
+                       this.duoSynth,
+                       this.fmSynth,
+                       this.membraneSynth,
+                       this.metalSynth,
+                       this.monoSynth,
+                       this.synth]
+
+        this.synthInt = Math.floor(Math.random() * this.synths.length)
+        this.sessionSynth = this.synths[this.synthInt]
+
+        this.socket.channels[0].push("synth_assign", { body: this.synthInt })
+
+        console.log(this.sessionSynth.voice.name)
 
         this.notes = [
             'c1',
@@ -42,13 +72,6 @@ class SynthManager {
     }
 
     setup() {
-        //connect it to the speaker output
-        this.piano.toDestination()
-
-        this.piano.load().then(() => {
-            this.transportCheck()
-        })
-
         document.querySelector('span').addEventListener('touchstart', (e) => {
             this.pressDown(e)
         })
@@ -64,13 +87,18 @@ class SynthManager {
         document.querySelector('span').addEventListener('mouseup', (e) => {
             this.pressUp(e)
         })
+        document.querySelector('span').addEventListener('mouseout', (e) => {
+            this.pressUp(e)
+        })
 
     }
 
-    pressDown(e) {
-        // invoke on mousedown if we have to
-        this.transportCheck()
+    async toneMe() {
+        await Tone.start()
+        console.log('audio is ready')
+    }
 
+    pressDown(e) {
         // get a note and assign that value to a data attr for ephemeral state
         let note = this.getRandomNote()
         e.target.textContent = "🫥"
@@ -81,7 +109,18 @@ class SynthManager {
 
     pressUp(e) {
         e.target.textContent = "🤡"
-        this.socket.channels[0].push("clownup", { body: e.currentTarget.dataset.note })  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
+        if(e.currentTarget.dataset.note) {
+            this.socket.channels[0].push("clownup", { body: e.currentTarget.dataset.note })  // old -> this.stopRandomNote(e.currentTarget.dataset.note)
+            e.currentTarget.dataset.note = ""
+        }
+    }
+
+    keyboardDown(note) {
+        this.socket.channels[0].push("clowndown", { body: note })
+    }
+
+    keyboardUp(note) {
+        this.socket.channels[0].push("clownup", { body: note })
     }
 
     getRandomNote() {
@@ -89,18 +128,12 @@ class SynthManager {
         return note
     }
 
-    playRandomNote(note) {
-        this.piano.keyDown({ note: note, velocity: 0.5 })
+    playNote(note, synth) {
+        this.synths[synth].triggerAttack(note, Tone.now())
     }
 
-    stopRandomNote(note) {
-        this.piano.keyUp({ note: note })
-    }
-
-    transportCheck() {
-        if (Tone.Transport.state == "stopped") {
-            Tone.Transport.toggle()
-        }
+    stopNote(note, synth) {
+        this.synths[synth].triggerRelease(note, Tone.now() + 0.125)
     }
 
     yo() {
