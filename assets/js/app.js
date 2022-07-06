@@ -104,6 +104,8 @@ function startup() {
         })
         ele.currentTarget.classList.add('hidden')
 
+        document.getElementById('hello').classList.add('waving-hand')
+
         // Tone start - esp. mobile click initiated
         synthManager.toneMe()
     })
