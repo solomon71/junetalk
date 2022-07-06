@@ -14,6 +14,7 @@ defmodule JunetalkWeb.RoomChannel do
   # by sending replies to requests from the client
   @impl true
   def handle_in("ping", payload, socket) do
+    IO.inspect(payload)
     {:reply, {:ok, payload}, socket}
   end
 
@@ -38,6 +39,18 @@ defmodule JunetalkWeb.RoomChannel do
   def handle_in("shout", payload, socket) do
     broadcast(socket, "shout", payload)
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info("zzz", socket) do
+    IO.puts("zzz")
+    {:noreply, socket}
+  end
+
+  def heartbeat(arg) do
+    IO.puts(arg)
+    JunetalkWeb.Endpoint.local_broadcast_from(self(), "room:lobby", "zzz", %{})
+    {:noreply}
   end
 
   # Add authorization logic here as required.

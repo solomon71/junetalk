@@ -15,9 +15,9 @@ defmodule Junetalk.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Junetalk.PubSub},
       # Start the Endpoint (http/https)
-      JunetalkWeb.Endpoint
+      JunetalkWeb.Endpoint,
       # Start a worker by calling: Junetalk.Worker.start_link(arg)
-      # {Junetalk.Worker, arg}
+      {JunetalkWeb.Worker, 30_000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
