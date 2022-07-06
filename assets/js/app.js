@@ -1,6 +1,6 @@
 // We import the CSS which is extracted to its own file by esbuild.
 // Remove this line if you add a your own CSS build pipeline (e.g postcss).
-//  import "../css/app.css" <-- b/c tailwind
+//  import "../css/app.css" <-- b/c Tailwind is installed
 
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
@@ -36,7 +36,7 @@ import SynthManager from './audio/synthmanager'
 import ClownMidi from "./audio/clownmidi"
 
 // particle
-import Particle from './particle'
+import Particle from './fx/particle'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
@@ -47,23 +47,28 @@ let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToke
 // window.addEventListener("phx:page-loading-stop", info => topbar.hide())
 
 
+// our synth instances
 let synthManager = new SynthManager(socket)
 synthManager.setup()
 
+// for MIDI keyboards, MPE doesn't work
 let clownMIDI = new ClownMidi()
 clownMIDI.setup()
 
+// polka dots in canvas
 let dots = new Particle()
 dots.setup()
 
 // MIDI
-window.addEventListener('midikeys', (e) => {
+window.addEventListener('midikeys', (e) => {  // midikeys is a custom event
     let code = e.detail[0]  // 144 key press, 128 key release
     switch (code) {
         case 144:
+            // note ON
             synthManager.keyboardDown(`${e.detail[1]}`)
             break
         case 128:
+            // note OFF
             synthManager.keyboardUp(`${e.detail[1]}`)
             break
         default:
@@ -99,17 +104,9 @@ function startup() {
         })
         ele.currentTarget.classList.add('hidden')
 
+        // Tone start - esp. mobile click initiated
         synthManager.toneMe()
     })
 }
-
-// function userInit(ele) {
-//     document.querySelectorAll('.hidden').forEach( (ele) => {
-//         ele.classList.remove('hidden')
-//     })
-//     ele.currentTarget.classList.add('hidden')
-
-//     synthManager.toneMe()
-// }
 
 document.addEventListener("DOMContentLoaded", startup);
