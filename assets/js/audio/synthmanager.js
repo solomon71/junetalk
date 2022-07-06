@@ -129,6 +129,7 @@ class SynthManager {
     }
 
     playNote(note, synth) {
+        // this.synths[synth].triggerAttack(note, Tone.now(), 0.5 + Math.floor(Math.random() * 0.25))
         this.synths[synth].triggerAttack(note, Tone.now())
     }
 
